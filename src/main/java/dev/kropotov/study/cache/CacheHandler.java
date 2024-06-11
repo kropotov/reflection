@@ -8,11 +8,11 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CacheMaker implements InvocationHandler {
+public class CacheHandler implements InvocationHandler {
     private final Object obj;
     private final Map<Method, Object> cachedMethodValues = new HashMap<>();
 
-    public CacheMaker(Object obj) {
+    public CacheHandler(Object obj) {
         this.obj = obj;
     }
 
@@ -21,11 +21,10 @@ public class CacheMaker implements InvocationHandler {
         Method objMethod = obj.getClass().getMethod(method.getName(), method.getParameterTypes());
 
         if (objMethod.isAnnotationPresent(Cache.class)) {
-            Object value = cachedMethodValues.get(objMethod);
-            if (value != null) {
-                return value;
+            if (cachedMethodValues.containsKey(objMethod)) {
+                return cachedMethodValues.get(objMethod);
             }
-            value = method.invoke(obj, args);
+            Object value = method.invoke(obj, args);
             cachedMethodValues.put(objMethod, value);
             return value;
         } else if (objMethod.isAnnotationPresent(Mutator.class)) {
