@@ -2,17 +2,17 @@ package dev.kropotov.study.cache;
 
 import dev.kropotov.study.annotations.Cache;
 import dev.kropotov.study.annotations.Mutator;
+import dev.kropotov.study.state.Savable;
+import dev.kropotov.study.state.State;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 
-public class CacheHandler implements InvocationHandler {
-    private final Object obj;
-    private final Map<Method, Object> cachedMethodValues = new HashMap<>();
+public class CacheHandler<T extends Savable> implements InvocationHandler {
+    private final T obj;
+    private State state;
 
-    public CacheHandler(Object obj) {
+    public CacheHandler(T obj) {
         this.obj = obj;
     }
 
@@ -21,14 +21,19 @@ public class CacheHandler implements InvocationHandler {
         Method objMethod = obj.getClass().getMethod(method.getName(), method.getParameterTypes());
 
         if (objMethod.isAnnotationPresent(Cache.class)) {
-            if (cachedMethodValues.containsKey(objMethod)) {
-                return cachedMethodValues.get(objMethod);
+            if (state == null) {
+                state = obj.save();
             }
-            Object value = method.invoke(obj, args);
-            cachedMethodValues.put(objMethod, value);
+            long lifetime = objMethod.getAnnotation(Cache.class).value();
+            Object value = GlobalCacheRepository.getObjectCachedMethodValue(state, objMethod, lifetime);
+            if (value != null) {
+                return value;
+            }
+            value = method.invoke(obj, args);
+            GlobalCacheRepository.setObjectCachedMethodValue(state, objMethod, value, lifetime);
             return value;
         } else if (objMethod.isAnnotationPresent(Mutator.class)) {
-            cachedMethodValues.clear();
+            state = null;
         }
 
         return method.invoke(obj, args);

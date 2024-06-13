@@ -10,14 +10,25 @@ public class UtilsTest {
     @Test
     @DisplayName("Тестирование кэширования")
     public void cache() {
-        FractionCachingTestClass fraction = new FractionCachingTestClass(2, 3);
+        int num = 3, denum = 2;
+
+        FractionCachingTestClass fraction = new FractionCachingTestClass(num, denum);
         Fractionable fr = Utils.cache(fraction);
-        fr.doubleValue();
-        fr.doubleValue();
-        assertEquals(fraction.getCountExecutions(), 1);
-        fr.setNum(5);
-        fr.doubleValue();
-        assertEquals(fraction.getCountExecutions(), 2);
+        assertEquals((double) num / denum, fr.doubleValue());
+        assertEquals((double) num / denum, fr.doubleValue());
+        assertEquals(1, fraction.getCountExecutions());
+
+        int oldNum = num;
+        num = 5;
+        fr.setNum(num);
+        assertEquals((double) num / denum, fr.doubleValue());
+        assertEquals((double) num / denum, fr.doubleValue());
+        assertEquals(2, fraction.getCountExecutions());
+
+        num = oldNum;
+        fr.setNum(num);
+        assertEquals((double) num / denum, fr.doubleValue());
+        assertEquals(2, fraction.getCountExecutions());
 
     }
 }
