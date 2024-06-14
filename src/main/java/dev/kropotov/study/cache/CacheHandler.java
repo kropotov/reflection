@@ -2,13 +2,12 @@ package dev.kropotov.study.cache;
 
 import dev.kropotov.study.annotations.Cache;
 import dev.kropotov.study.annotations.Mutator;
-import dev.kropotov.study.state.Savable;
 import dev.kropotov.study.state.State;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-public class CacheHandler<T extends Savable> implements InvocationHandler {
+public class CacheHandler<T> implements InvocationHandler {
     private final T obj;
     private State state;
 
@@ -22,7 +21,7 @@ public class CacheHandler<T extends Savable> implements InvocationHandler {
 
         if (objMethod.isAnnotationPresent(Cache.class)) {
             if (state == null) {
-                state = obj.save();
+                state = new State(obj);
             }
             long lifetime = objMethod.getAnnotation(Cache.class).value();
             Object value = GlobalCacheRepository.getObjectCachedMethodValue(state, objMethod, lifetime);
