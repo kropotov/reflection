@@ -37,10 +37,10 @@ public class GlobalCacheRepository {
     public static void clearExpiredCaches() {
         cachedMethodValues.values().forEach(methodExpirationValues -> methodExpirationValues
                 .forEach((method, expirationValue) -> {
-            if (LocalDateTime.now().isAfter(expirationValue.getExpiration())) {
-                methodExpirationValues.remove(method, expirationValue);
-            }
-        }));
+                    if (LocalDateTime.now().isAfter(expirationValue.getExpiration())) {
+                        methodExpirationValues.remove(method, expirationValue);
+                    }
+                }));
     }
 
     public static class Cleaner implements Runnable {
