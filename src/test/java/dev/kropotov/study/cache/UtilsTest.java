@@ -16,19 +16,18 @@ public class UtilsTest {
         Fractionable fr = Utils.cache(fraction);
         assertEquals((double) num / denum, fr.doubleValue());
         assertEquals((double) num / denum, fr.doubleValue());
-        assertEquals(1, fraction.getCountExecutions());
+        assertEquals(1, ExecutionsCounter.getCountExecutions(fr));
 
         int oldNum = num;
         num = 5;
         fr.setNum(num);
         assertEquals((double) num / denum, fr.doubleValue());
         assertEquals((double) num / denum, fr.doubleValue());
-        assertEquals(2, fraction.getCountExecutions());
+        assertEquals(2, ExecutionsCounter.getCountExecutions(fr));
 
         num = oldNum;
         fr.setNum(num);
         assertEquals((double) num / denum, fr.doubleValue());
-        assertEquals(2, fraction.getCountExecutions());
-
+        assertEquals(2, ExecutionsCounter.getCountExecutions(fr));
     }
 }
