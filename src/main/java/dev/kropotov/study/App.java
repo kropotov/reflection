@@ -6,8 +6,6 @@ import dev.kropotov.study.fraction.Fractionable;
 
 public class App {
     public static void main(String[] args) throws InterruptedException {
-        Thread.sleep(1000); // дадим время запуститься потоку очистки кэша
-
         Fraction fr = new Fraction(2, 3);
         Fractionable num = Utils.cache(fr);
         System.out.println(num.doubleValue());// sout сработал
