@@ -1,5 +1,7 @@
 package dev.kropotov.study.cache;
 
+import lombok.SneakyThrows;
+
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -7,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GlobalCacheRepository {
+    private static final int MAX_SIZE = 2; //TODO: сейчастак мало, чтобы точно запустить поток очистки для тестового App.java
     private static final Map<Object, Map<Method, ExpirationValue>> cachedMethodValues = new ConcurrentHashMap<>();
 
     private static Cleaner cleaner;
@@ -28,17 +31,22 @@ public class GlobalCacheRepository {
             cachedMethodValues.put(object, new ConcurrentHashMap<>());
         }
         cachedMethodValues.get(object).put(method, new ExpirationValue(value, LocalDateTime.now().plus(lifetime, ChronoUnit.MILLIS)));
-        if (cleaner == null) {
+        if (cleaner == null && cachedMethodValues.size() >= MAX_SIZE) {
             cleaner = new Cleaner();
             cleaner.start();
         }
     }
 
     public static void clearExpiredCaches() {
-        cachedMethodValues.values().forEach(methodExpirationValues -> methodExpirationValues
+        System.out.println("Clearing expired caches: " + Thread.currentThread().getName());//TODO: убрать отладку
+        cachedMethodValues.forEach((object, methodExpirationValues) -> methodExpirationValues
                 .forEach((method, expirationValue) -> {
                     if (LocalDateTime.now().isAfter(expirationValue.getExpiration())) {
+                        System.out.println("Clearing expired cache: " + method.getName() + " = " + expirationValue.getValue());//TODO: убрать отладку
                         methodExpirationValues.remove(method, expirationValue);
+                        if (methodExpirationValues.isEmpty()) {
+                            cachedMethodValues.remove(object);
+                        }
                     }
                 }));
     }
@@ -49,27 +57,12 @@ public class GlobalCacheRepository {
             cleanerThread.start();
         }
 
+        @SneakyThrows//TODO: для тестового App.java
         @Override
         public void run() {
-            //TODO: тестовые значения, ограничиваюшие время работы потока
-            final int MAX_COUNT = 3;
-            int count = 0;
-            //
-
-            while (true) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                clearExpiredCaches();
-
-                //TODO: тестовые значения, ограничиваюшие время работы потока
-                if (count++ > MAX_COUNT) {
-                    break;
-                }
-                //
-            }
+            Thread.sleep(1000); //TODO: для тестового App.java
+            clearExpiredCaches();
+            cleaner = null;
         }
     }
 }
